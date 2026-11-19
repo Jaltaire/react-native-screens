@@ -46,7 +46,31 @@ static const NSNumber *const DEFAULT_TITLE_LARGE_FONT_SIZE = @34;
 
 @end
 
+@interface RNSAppliedBarButtonItems : NSObject
+
+@property (nonatomic, copy, nullable) NSArray<NSDictionary<NSString *, id> *> *configs;
+@property (nonatomic, copy, nullable) NSArray<UIBarButtonItem *> *customItems;
+@property (nonatomic, copy, nullable) NSArray<UIBarButtonItem *> *items;
+
+@end
+
+@implementation RNSAppliedBarButtonItems
+@end
+
+static BOOL RNSBarButtonArraysEqual(NSArray *_Nullable first, NSArray *_Nullable second)
+{
+  if (first.count == 0 && second.count == 0) {
+    return YES;
+  }
+  return [first isEqualToArray:second];
+}
+
 @interface RNSScreenStackHeaderConfig () <RCTMountingTransactionObserving>
+
+@property (nonatomic, readonly) RNSAppliedBarButtonItems *appliedLeftBarButtonItems;
+@property (nonatomic, readonly) RNSAppliedBarButtonItems *appliedRightBarButtonItems;
+@property (nonatomic) BOOL hasAppliedBarButtonItems;
+
 @end
 
 @implementation RNSScreenStackHeaderConfig {
@@ -63,6 +87,8 @@ static const NSNumber *const DEFAULT_TITLE_LARGE_FONT_SIZE = @34;
   /// Consumed & reset in `mountingTransactionDidMount:withSurfaceTelemetry:`.
   bool _needsViewControllerUpdateInCurrentTransaction;
   RCTImageLoader *_imageLoader;
+  RNSAppliedBarButtonItems *_appliedLeftBarButtonItems;
+  RNSAppliedBarButtonItems *_appliedRightBarButtonItems;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -676,8 +702,8 @@ RNS_IGNORE_SUPER_CALL_END
   navitem.leftItemsSupplementBackButton = config.backButtonInCustomView;
 #endif
   navitem.titleView = nil;
-  navitem.leftBarButtonItems = nil;
-  navitem.rightBarButtonItems = nil;
+  NSMutableArray<UIBarButtonItem *> *leftCustomItems = [NSMutableArray new];
+  NSMutableArray<UIBarButtonItem *> *rightCustomItems = [NSMutableArray new];
 
 #if !TARGET_OS_TV
   // We want to set navitem.searchController to nil only if we are sure
@@ -690,17 +716,11 @@ RNS_IGNORE_SUPER_CALL_END
     // `- [RNSScreenStackHeaderConfig replaceNavigationBarViewsWithSnapshotOfSubview:]` method.
     switch (subview.type) {
       case RNSScreenStackHeaderSubviewTypeLeft: {
-        NSArray<UIBarButtonItem *> *currentItems = navitem.leftBarButtonItems ?: @[];
-        NSMutableArray<UIBarButtonItem *> *mutableItems = [currentItems mutableCopy];
-        [mutableItems addObject:[subview getUIBarButtonItem]];
-        navitem.leftBarButtonItems = mutableItems;
+        [leftCustomItems addObject:[subview getUIBarButtonItem]];
         break;
       }
       case RNSScreenStackHeaderSubviewTypeRight: {
-        NSArray<UIBarButtonItem *> *currentItems = navitem.rightBarButtonItems ?: @[];
-        NSMutableArray<UIBarButtonItem *> *mutableItems = [currentItems mutableCopy];
-        [mutableItems addObject:[subview getUIBarButtonItem]];
-        navitem.rightBarButtonItems = mutableItems;
+        [rightCustomItems addObject:[subview getUIBarButtonItem]];
         break;
       }
       case RNSScreenStackHeaderSubviewTypeCenter:
@@ -765,10 +785,21 @@ RNS_IGNORE_SUPER_CALL_END
   // This assignment should be done after `navitem.titleView = ...` assignment (iOS 16.0 bug).
   // See: https://github.com/software-mansion/react-native-screens/issues/1570 (comments)
   navitem.title = config.title;
-  navitem.leftBarButtonItems = [config barButtonItemsFromConfigs:config.headerLeftBarButtonItems
-                                                withCurrentItems:navitem.leftBarButtonItems];
-  navitem.rightBarButtonItems = [config barButtonItemsFromConfigs:config.headerRightBarButtonItems
-                                                 withCurrentItems:navitem.rightBarButtonItems];
+  NSArray<UIBarButtonItem *> *leftItems = [config barButtonItemsFromConfigs:config.headerLeftBarButtonItems
+                                                                customItems:leftCustomItems
+                                                                    applied:config.appliedLeftBarButtonItems];
+  NSArray<UIBarButtonItem *> *rightItems = [config barButtonItemsFromConfigs:config.headerRightBarButtonItems
+                                                                 customItems:rightCustomItems
+                                                                     applied:config.appliedRightBarButtonItems];
+  BOOL animatesItems = animated && config.hasAppliedBarButtonItems && vc.transitionCoordinator == nil &&
+      vc.viewIfLoaded.window != nil;
+  if (!RNSBarButtonArraysEqual(navitem.leftBarButtonItems, leftItems)) {
+    [navitem setLeftBarButtonItems:leftItems animated:animatesItems];
+  }
+  if (!RNSBarButtonArraysEqual(navitem.rightBarButtonItems, rightItems)) {
+    [navitem setRightBarButtonItems:rightItems animated:animatesItems];
+  }
+  config.hasAppliedBarButtonItems = YES;
 
   // Setting navigation bar visibility is split to mitigate iOS 26 bug with bar button items
   // (setting nav bar visibility should be done after `navitem.*BarButtonItems`).
@@ -897,6 +928,37 @@ RNS_IGNORE_SUPER_CALL_END
     [[UISearchBar appearanceWhenContainedInInstancesOfClasses:@[ navCtrl.navigationBar.class ]]
         setSemanticContentAttribute:self.direction];
   }
+}
+
+- (RNSAppliedBarButtonItems *)appliedLeftBarButtonItems
+{
+  if (_appliedLeftBarButtonItems == nil) {
+    _appliedLeftBarButtonItems = [RNSAppliedBarButtonItems new];
+  }
+  return _appliedLeftBarButtonItems;
+}
+
+- (RNSAppliedBarButtonItems *)appliedRightBarButtonItems
+{
+  if (_appliedRightBarButtonItems == nil) {
+    _appliedRightBarButtonItems = [RNSAppliedBarButtonItems new];
+  }
+  return _appliedRightBarButtonItems;
+}
+
+- (NSArray<UIBarButtonItem *> *)barButtonItemsFromConfigs:(NSArray<NSDictionary<NSString *, id> *> *)dicts
+                                              customItems:(NSArray<UIBarButtonItem *> *)customItems
+                                                  applied:(RNSAppliedBarButtonItems *)applied
+{
+  if (applied.items != nil && RNSBarButtonArraysEqual(dicts, applied.configs) &&
+      RNSBarButtonArraysEqual(customItems, applied.customItems)) {
+    return applied.items;
+  }
+  NSArray<UIBarButtonItem *> *items = [self barButtonItemsFromConfigs:dicts withCurrentItems:customItems];
+  applied.configs = dicts;
+  applied.customItems = customItems;
+  applied.items = items;
+  return items;
 }
 
 - (NSArray<UIBarButtonItem *> *)barButtonItemsFromConfigs:(NSArray<NSDictionary<NSString *, id> *> *)dicts
