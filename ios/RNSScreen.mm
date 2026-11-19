@@ -275,7 +275,7 @@ RNS_IGNORE_SUPER_CALL_END
 {
   if (_sheetPreferredContentWidth > 0) {
     sheetController.prefersPageSizing = false;
-    _controller.preferredContentSize = CGSizeMake(_sheetPreferredContentWidth, 0);
+    _controller.preferredContentSize = CGSizeMake(_sheetPreferredContentWidth, [self modalSheetFillHeight]);
   } else {
     sheetController.prefersPageSizing = true;
     if (_appliedSheetPreferredContentWidth) {
@@ -285,6 +285,31 @@ RNS_IGNORE_SUPER_CALL_END
   _appliedSheetPreferredContentWidth = _sheetPreferredContentWidth > 0;
 }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+- (CGFloat)modalSheetFillHeight
+{
+  UIWindow *window = _controller.presentingViewController.view.window ?: self.window;
+  CGSize screenSize = window.windowScene.screen.bounds.size;
+  CGSize windowSize = window.bounds.size;
+  return MAX(MAX(screenSize.width, screenSize.height), MAX(windowSize.width, windowSize.height));
+}
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+
+- (void)applyPresentedModalSheetSizing
+{
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+  if (_stackPresentation != RNSScreenStackPresentationModal) {
+    return;
+  }
+  if (@available(iOS 18.0, *)) {
+    UISheetPresentationController *sheetController = _controller.sheetPresentationController;
+    if (sheetController != nil) {
+      [self applyModalSheetSizing:sheetController];
+    }
+  }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+}
 
 #if !TARGET_OS_TV
 - (void)setSheetPreferredContentWidth:(CGFloat)sheetPreferredContentWidth
@@ -1524,6 +1549,9 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
 - (void)viewWillAppear:(BOOL)animated
 {
   [super viewWillAppear:animated];
+  if (self.presentingViewController != nil) {
+    [self.screenView applyPresentedModalSheetSizing];
+  }
   if (!_isSwiping) {
     [self.screenView notifyWillAppear];
     if (self.transitionCoordinator.isInteractive) {
@@ -1546,6 +1574,20 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
     [self notifyTransitionProgress:0.0 closing:_closing goingForward:_goingForward];
     [self setupProgressNotification];
   }
+}
+
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
+{
+  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+  if (self.presentingViewController == nil) {
+    return;
+  }
+  __weak RNSScreen *weakSelf = self;
+  [coordinator animateAlongsideTransition:nil
+                               completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                 [weakSelf.screenView applyPresentedModalSheetSizing];
+                               }];
 }
 
 - (void)viewWillDisappear:(BOOL)animated

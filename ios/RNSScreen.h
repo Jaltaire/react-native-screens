@@ -142,6 +142,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)notifyHeaderHeightChange:(double)height;
 
 - (void)notifyWillAppear;
+- (void)applyPresentedModalSheetSizing;
 - (void)notifyWillDisappear;
 - (void)notifyAppear;
 - (void)notifyDisappear;
