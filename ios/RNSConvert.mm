@@ -30,6 +30,34 @@
   }
 }
 
++ (RNSTitleAlignment)RNSTitleAlignmentFromCppEquivalent:(react::RNSScreenStackHeaderConfigTitleAlignment)titleAlignment
+{
+  switch (titleAlignment) {
+    using enum react::RNSScreenStackHeaderConfigTitleAlignment;
+
+    case Automatic:
+      return RNSTitleAlignmentAutomatic;
+    case Leading:
+      return RNSTitleAlignmentLeading;
+    case Center:
+      return RNSTitleAlignmentCenter;
+  }
+}
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_2) && !TARGET_OS_TV
++ (UINavigationItemTitleAlignment)UINavigationItemTitleAlignmentFromRNSTitleAlignment:(RNSTitleAlignment)titleAlignment
+{
+  switch (titleAlignment) {
+    case RNSTitleAlignmentAutomatic:
+      return UINavigationItemTitleAlignmentAutomatic;
+    case RNSTitleAlignmentLeading:
+      return UINavigationItemTitleAlignmentLeading;
+    case RNSTitleAlignmentCenter:
+      return UINavigationItemTitleAlignmentCenter;
+  }
+}
+#endif
+
 + (RNSOptionalBoolean)RNSOptionalBooleanFromRNSFullScreenSwipeEnabledCppEquivalent:
     (react::RNSScreenFullScreenSwipeEnabled)fullScreenSwipeEnabled
 {

@@ -20,6 +20,8 @@ type OnPressHeaderBarButtonMenuItemEvent = Readonly<{ menuId: string }>;
 
 type BackButtonDisplayMode = 'minimal' | 'default' | 'generic';
 
+type TitleAlignment = 'automatic' | 'leading' | 'center';
+
 type BlurEffect =
   | 'none'
   | 'extraLight'
@@ -72,6 +74,7 @@ export interface NativeProps extends ViewProps {
   titleColor?: ColorValue | undefined;
   disableBackButtonMenu?: boolean | undefined;
   backButtonDisplayMode?: CT.WithDefault<BackButtonDisplayMode, 'default'>;
+  titleAlignment?: CT.WithDefault<TitleAlignment, 'automatic'>;
   hideBackButton?: boolean | undefined;
   backButtonInCustomView?: boolean | undefined;
   blurEffect?: CT.WithDefault<BlurEffect, 'none'>;
