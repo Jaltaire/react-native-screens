@@ -61,6 +61,7 @@ struct ContentWrapperBox {
   CGFloat _sheetContentHeight;
   ContentWrapperBox _contentWrapperBox;
   bool _sheetHasInitialDetentSet;
+  BOOL _appliedSheetPreferredContentWidth;
   BOOL _shouldUpdateScrollEdgeEffects;
   UITapGestureRecognizer *_backdropTapGestureRecognizer;
   RCTSurfaceTouchHandler *_touchHandler;
@@ -100,6 +101,7 @@ struct ContentWrapperBox {
   _shouldUpdateScrollEdgeEffects = NO;
 #if !TARGET_OS_TV
   _sheetExpandsWhenScrolledToEdge = YES;
+  _sheetPreferredContentWidth = -1.0;
 #endif // !TARGET_OS_TV
   _sheetsScrollView = nil;
   _sheetsScrollViewTag = 0;
@@ -268,6 +270,40 @@ RNS_IGNORE_SUPER_CALL_END
   }
 }
 
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+- (void)applyModalSheetSizing:(UISheetPresentationController *)sheetController API_AVAILABLE(ios(17.0))
+{
+  if (_sheetPreferredContentWidth > 0) {
+    sheetController.prefersPageSizing = false;
+    _controller.preferredContentSize = CGSizeMake(_sheetPreferredContentWidth, 0);
+  } else {
+    sheetController.prefersPageSizing = true;
+    if (_appliedSheetPreferredContentWidth) {
+      _controller.preferredContentSize = CGSizeZero;
+    }
+  }
+  _appliedSheetPreferredContentWidth = _sheetPreferredContentWidth > 0;
+}
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(17_0) && !TARGET_OS_TV
+
+#if !TARGET_OS_TV
+- (void)setSheetPreferredContentWidth:(CGFloat)sheetPreferredContentWidth
+{
+  _sheetPreferredContentWidth = sheetPreferredContentWidth;
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(17_0)
+  if (_stackPresentation != RNSScreenStackPresentationModal) {
+    return;
+  }
+  if (@available(iOS 18.0, *)) {
+    UISheetPresentationController *sheetController = _controller.sheetPresentationController;
+    if (sheetController != nil) {
+      [self applyModalSheetSizing:sheetController];
+    }
+  }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(17_0)
+}
+#endif // !TARGET_OS_TV
+
 - (void)setStackPresentation:(RNSScreenStackPresentation)stackPresentation
 {
   switch (stackPresentation) {
@@ -277,7 +313,7 @@ RNS_IGNORE_SUPER_CALL_END
       if (@available(iOS 18.0, *)) {
         UISheetPresentationController *sheetController = _controller.sheetPresentationController;
         if (sheetController != nil) {
-          sheetController.prefersPageSizing = true;
+          [self applyModalSheetSizing:sheetController];
         } else {
           RCTLogError(
               @"[RNScreens] sheetPresentationController is null when attempting to set prefersPageSizing for modal");
@@ -1333,6 +1369,9 @@ RNS_IGNORE_SUPER_CALL_END
 
   [self setSheetGrabberVisible:newScreenProps.sheetGrabberVisible];
   [self setSheetCornerRadius:newScreenProps.sheetCornerRadius];
+  if (newScreenProps.sheetPreferredContentWidth != oldScreenProps.sheetPreferredContentWidth) {
+    [self setSheetPreferredContentWidth:newScreenProps.sheetPreferredContentWidth];
+  }
   [self setSheetExpandsWhenScrolledToEdge:newScreenProps.sheetExpandsWhenScrolledToEdge];
 
   if (newScreenProps.sheetAllowedDetents != oldScreenProps.sheetAllowedDetents) {
