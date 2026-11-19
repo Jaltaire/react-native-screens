@@ -35,6 +35,7 @@ export type SearchBarCommands = {
 };
 
 export type BackButtonDisplayMode = 'default' | 'generic' | 'minimal';
+export type HeaderTitleAlignment = 'automatic' | 'leading' | 'center';
 export type StackPresentationTypes =
   | 'push'
   | 'modal'
@@ -769,6 +770,19 @@ export interface ScreenStackHeaderConfigProps extends ViewProps {
    * @platform ios
    */
   backButtonDisplayMode?: BackButtonDisplayMode | undefined;
+  /**
+   * Where the navigation bar places the title. The values correspond to
+   * [UINavigationItemTitleAlignment](https://developer.apple.com/documentation/uikit/uinavigationitem/titlealignment):
+   *
+   * - `automatic` – the system decides; it centers the title, but may lead-align it depending on where the bar is shown
+   * - `leading` – the title is lead-aligned
+   * - `center` – the title is centered, and only shifts toward the leading edge to clear the trailing items
+   *
+   * Takes effect on iOS 27.2 and later. Defaults to `automatic`.
+   *
+   * @platform ios
+   */
+  titleAlignment?: HeaderTitleAlignment | undefined;
   /**
    * Array of UIBarButtomItems to the left side of the header.
    *

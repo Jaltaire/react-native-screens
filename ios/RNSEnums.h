@@ -91,6 +91,12 @@ typedef NS_ENUM(NSInteger, RNSSplitScreenColumnType) {
 };
 
 // Redefinition of UIBlurEffectStyle. We need to represent additional cases of `None` and `SystemDefault`.
+typedef NS_ENUM(NSInteger, RNSTitleAlignment) {
+  RNSTitleAlignmentAutomatic,
+  RNSTitleAlignmentLeading,
+  RNSTitleAlignmentCenter,
+};
+
 typedef NS_ENUM(NSInteger, RNSBlurEffectStyle) {
   /// Default blur effect should be used
   RNSBlurEffectStyleSystemDefault = -2,

@@ -111,6 +111,7 @@ static BOOL RNSBarButtonArraysEqual(NSArray *_Nullable first, NSArray *_Nullable
   _reactSubviews = [NSMutableArray new];
   _backTitleVisible = YES;
   _blurEffect = RNSBlurEffectStyleNone;
+  _titleAlignment = RNSTitleAlignmentAutomatic;
   _synchronousShadowStateUpdatesEnabled = YES;
 }
 
@@ -587,6 +588,12 @@ RNS_IGNORE_SUPER_CALL_END
   }
   navitem.largeTitleDisplayMode =
       config.largeTitle ? UINavigationItemLargeTitleDisplayModeAlways : UINavigationItemLargeTitleDisplayModeNever;
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_2)
+  if (@available(iOS 27.2, *)) {
+    navitem.titleAlignment = [RNSConvert UINavigationItemTitleAlignmentFromRNSTitleAlignment:config.titleAlignment];
+  }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_2)
 
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
   if (@available(iOS 27.0, *)) {
@@ -1165,6 +1172,7 @@ static RCTResizeMode resizeModeFromCppEquiv(react::ImageResizeMode resizeMode)
   _disableBackButtonMenu = newScreenProps.disableBackButtonMenu;
   _backButtonDisplayMode =
       [RNSConvert UINavigationItemBackButtonDisplayModeFromCppEquivalent:newScreenProps.backButtonDisplayMode];
+  _titleAlignment = [RNSConvert RNSTitleAlignmentFromCppEquivalent:newScreenProps.titleAlignment];
 
   if (newScreenProps.userInterfaceStyle != oldScreenProps.userInterfaceStyle) {
     _userInterfaceStyle = [RNSConvert UIUserInterfaceStyleFromCppEquivalent:newScreenProps.userInterfaceStyle];

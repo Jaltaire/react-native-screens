@@ -67,6 +67,13 @@ namespace react = facebook::react;
 
 + (RNSBlurEffectStyle)RNSBlurEffectStyleFromCppEquivalent:(react::RNSScreenStackHeaderConfigBlurEffect)blurEffect;
 
++ (RNSTitleAlignment)RNSTitleAlignmentFromCppEquivalent:(react::RNSScreenStackHeaderConfigTitleAlignment)titleAlignment;
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_2) && !TARGET_OS_TV
++ (UINavigationItemTitleAlignment)UINavigationItemTitleAlignmentFromRNSTitleAlignment:(RNSTitleAlignment)titleAlignment
+    API_AVAILABLE(ios(27.2));
+#endif
+
 + (RNSScrollEdgeEffect)RNSScrollEdgeEffectFromScreenBottomScrollEdgeEffectCppEquivalent:
     (react::RNSScreenBottomScrollEdgeEffect)edgeEffect;
 + (RNSScrollEdgeEffect)RNSScrollEdgeEffectFromScreenLeftScrollEdgeEffectCppEquivalent:
