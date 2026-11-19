@@ -118,6 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSNumber *sheetLargestUndimmedDetent;
 @property (nonatomic) BOOL sheetGrabberVisible;
 @property (nonatomic) CGFloat sheetCornerRadius;
+@property (nonatomic) CGFloat sheetPreferredContentWidth;
 @property (nonatomic) NSInteger sheetInitialDetent;
 @property (nonatomic) BOOL sheetExpandsWhenScrolledToEdge;
 #endif // !TARGET_OS_TV

@@ -474,6 +474,17 @@ export interface ScreenProps extends ViewProps {
    */
   sheetCornerRadius?: number | undefined;
   /**
+   * The width, in points, that a `modal` sheet prefers where the system lays
+   * sheets out at a width of its own choosing (a regular-width window). When
+   * set, the sheet is sized by its `preferredContentSize` instead of the page
+   * width (`prefersPageSizing` is turned off). Has no effect where the system
+   * presents sheets at the full width of the window. Defaults to `-1.0`,
+   * which leaves the page sizing in place.
+   *
+   * @platform ios
+   */
+  sheetPreferredContentWidth?: number | undefined;
+  /**
    * Boolean indicating whether the sheet shows a grabber at the top.
    * Works only when `stackPresentation` is set to `formSheet`.
    * Defaults to `false`.

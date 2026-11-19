@@ -371,6 +371,11 @@ open class ScreenViewManager :
         view.sheetCornerRadius = value
     }
 
+    override fun setSheetPreferredContentWidth(
+        view: Screen,
+        value: Float,
+    ) = Unit
+
     override fun setSheetExpandsWhenScrolledToEdge(
         view: Screen,
         value: Boolean,

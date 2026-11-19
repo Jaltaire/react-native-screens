@@ -93,6 +93,7 @@ export interface NativeProps extends ViewProps {
   sheetLargestUndimmedDetent?: CT.WithDefault<CT.Int32, -1>;
   sheetGrabberVisible?: CT.WithDefault<boolean, false>;
   sheetCornerRadius?: CT.WithDefault<CT.Float, -1.0>;
+  sheetPreferredContentWidth?: CT.WithDefault<CT.Float, -1.0>;
   sheetExpandsWhenScrolledToEdge?: CT.WithDefault<boolean, false>;
   sheetInitialDetent?: CT.WithDefault<CT.Int32, 0>;
   sheetElevation?: CT.WithDefault<CT.Int32, 24>;
